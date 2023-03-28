@@ -4,11 +4,11 @@ version := "0.1"
 
 scalaVersion := "2.13.8"
 
-val akkaVersion = "2.6.17"
-val akkaHttpVersion = "10.2.8"
-val calibanVersion = "1.3.3"
-val circeVersion = "0.19.3"
-val zioVersion = "1.0.13"
+val akkaVersion = "2.6.20"
+val akkaHttpVersion = "10.2.10"
+val calibanVersion = "2.0.2"
+val circeVersion = "1.2.10"
+val zioVersion = "2.0.5"
 val logbackVersion = "1.2.10"
 val scalaLoggingVersion = "3.9.4"
 
@@ -19,6 +19,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % circeVersion,
   "dev.zio" %% "zio" % zioVersion,
+  "dev.zio" %% "zio-streams" % zioVersion,
   "ch.qos.logback" % "logback-classic" % logbackVersion,
   "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingVersion
 )

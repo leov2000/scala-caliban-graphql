@@ -2,54 +2,40 @@ package example
 
 import example.ExampleData._
 import zio.stream.ZStream
-import zio.{ Has, Hub, Ref, UIO, URIO, ZLayer }
+import zio.{ULayer, URIO, ZIO, ZLayer}
 
 object ExampleService {
-
-  type ExampleService = Has[Service]
+  type ServiceEnv = Service
 
   trait Service {
-    def getCharacters(origin: Option[Origin]): UIO[List[Character]]
+    def getCharacters: URIO[ServiceEnv, List[Character]]
 
-    def findCharacter(name: String): UIO[Option[Character]]
+    def findCharacter(name: String): URIO[ServiceEnv, Option[Character]]
 
-    def deleteCharacter(name: String): UIO[Boolean]
+    def deleteCharacter(name: String): URIO[ServiceEnv, Boolean]
 
-    def deletedEvents: ZStream[Any, Nothing, String]
   }
 
-  def getCharacters(origin: Option[Origin]): URIO[ExampleService, List[Character]] =
-    URIO.serviceWith(_.getCharacters(origin))
+  def getCharacters: URIO[ServiceEnv, List[Character]] =
+    ZIO.serviceWith[Service](_.getCharacters).flatten
+  def findCharacter(name: String): URIO[ServiceEnv, Option[Character]] =
+    ZIO.serviceWith[ServiceEnv](_.findCharacter(name)).flatten
 
-  def findCharacter(name: String): URIO[ExampleService, Option[Character]] =
-    URIO.serviceWith(_.findCharacter(name))
+  def deleteCharacter(name: String): URIO[ServiceEnv, Boolean] =
+    ZIO.serviceWith[ServiceEnv](_.deleteCharacter(name)).flatten
 
-  def deleteCharacter(name: String): URIO[ExampleService, Boolean] =
-    URIO.serviceWith(_.deleteCharacter(name))
+  def make(characters: Map[String, Character]):ULayer[ServiceEnv] =
+      ZLayer.succeed {
+        new Service {
 
-  def deletedEvents: ZStream[ExampleService, Nothing, String] =
-    ZStream.accessStream(_.get.deletedEvents)
+          def getCharacters: URIO[ServiceEnv, List[Character]] =
+            ZIO.succeed(characters.values.toList)
 
-  def make(initial: List[Character]): ZLayer[Any, Nothing, ExampleService] =
-    (for {
-      characters  <- Ref.make(initial)
-      subscribers <- Hub.unbounded[String]
-    } yield new Service {
+          def findCharacter(name: String): URIO[ServiceEnv, Option[Character]] = ZIO.succeed(characters.get(name))
 
-      def getCharacters(origin: Option[Origin]): UIO[List[Character]] =
-        characters.get.map(_.filter(c => origin.forall(c.origin == _)))
+          def deleteCharacter(name: String): URIO[ServiceEnv, Boolean] = ZIO.succeed(false)
 
-      def findCharacter(name: String): UIO[Option[Character]] = characters.get.map(_.find(c => c.name == name))
 
-      def deleteCharacter(name: String): UIO[Boolean] =
-        characters
-          .modify(list =>
-            if (list.exists(_.name == name)) (true, list.filterNot(_.name == name))
-            else (false, list)
-          )
-          .tap(deleted => UIO.when(deleted)(subscribers.publish(name)))
-
-      def deletedEvents: ZStream[Any, Nothing, String] =
-        ZStream.unwrapManaged(subscribers.subscribe.map(ZStream.fromQueue(_)))
-    }).toLayer
+        }
+      }
 }

@@ -1,29 +1,32 @@
 package example.akkahttp
 
 import example.ExampleData.sampleCharacters
-import example.ExampleService.ExampleService
-import example.{ ExampleApi, ExampleService }
+import example.ExampleService.{Service, ServiceEnv}
+import example.{ExampleApi, ExampleService}
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.io.StdIn
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
-import caliban.AkkaHttpAdapter
+import akka.http.scaladsl.server.Route
+import caliban.{AkkaHttpAdapter, CalibanError, GraphQLInterpreter}
 import sttp.tapir.json.circe._
-import zio.clock.Clock
-import zio.console.Console
-import zio.internal.Platform
-import zio.Runtime
+import sttp.tapir.server.akkahttp.AkkaHttpServerOptions
+import zio.{Runtime, Unsafe}
 
 object ExampleApp extends App {
 
   implicit val system: ActorSystem                                      = ActorSystem()
   implicit val executionContext: ExecutionContextExecutor               = system.dispatcher
-  implicit val runtime: Runtime[ExampleService with Console with Clock] =
-    Runtime.unsafeFromLayer(ExampleService.make(sampleCharacters) ++ Console.live ++ Clock.live, Platform.default)
+  implicit val runtime: Runtime[ServiceEnv] = Unsafe.unsafe{ implicit unsafe =>
+    Runtime.unsafe.fromLayer(ExampleService.make(Map()))
+  }
 
-  val interpreter = runtime.unsafeRun(ExampleApi.api.interpreter)
+  val interpreter: GraphQLInterpreter[ServiceEnv, CalibanError] = Unsafe.unsafe { implicit unsafe =>
+    runtime.unsafe.run(ExampleApi.api.interpreter).getOrThrowFiberFailure()
+  }
+
 
   /**
    * curl -X POST \
@@ -34,13 +37,11 @@ object ExampleApp extends App {
    * "query": "query { characters { name }}"
    * }'
    */
-  val route =
+  val route: Route =
     path("api" / "graphql") {
-      AkkaHttpAdapter.makeHttpService(interpreter)
-    } ~ path("ws" / "graphql") {
-      AkkaHttpAdapter.makeWebSocketService(interpreter)
-    } ~ path("graphiql") {
-      getFromResource("graphiql.html")
+      AkkaHttpAdapter(AkkaHttpServerOptions.default).makeHttpService(interpreter)
+    } ~ path("altair") {
+      getFromResource("altair.html")
     }
 
   val bindingFuture = Http().newServerAt("localhost", 8088).bind(route)
