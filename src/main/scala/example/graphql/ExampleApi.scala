@@ -1,26 +1,28 @@
-package example
+package example.graphql
 
 import caliban.GraphQL.graphQL
-import caliban._
-import caliban.schema.Annotations.{ GQLDeprecated, GQLDescription }
+import caliban.schema.Annotations.GQLDeprecated
 import caliban.schema.GenericSchema
-import example.graphql.{ ExampleEnv, ZService }
+import caliban.{ GraphQL, RootResolver }
 import example.graphql.ZService.ExampleService
 import example.schema.{ Account, AccountEvent }
-//import caliban.schema.ArgBuilder.auto._
-import zio._
+import zio.URIO
 import zio.stream.ZStream
-
-import scala.language.postfixOps
 
 object ExampleApi extends GenericSchema[ExampleEnv] {
 
-//  import auto._
+  //  import auto._
+  // schema stuff here for date
+  //add link for handroll
 
   case class AddAccountArgs(name: String, balance: Long)
+
   case class FindByAccountArgs(account: Int)
+
   case class FindByUserArgs(name: String)
+
   case class AccountBalanceUpdateArgs(account: Int, amount: Float)
+
   case class DeleteAccountArgs(account: Int)
 
   case class Queries(

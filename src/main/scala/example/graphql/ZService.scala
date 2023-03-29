@@ -60,7 +60,6 @@ object ZService {
           .getAndUpdate { state =>
             state + (account -> Account(name, account, balance, ZonedDateTime.now()))
           }
-          .tap(_ => subscribers.publish(OPEN))
       } yield true
 
       override def debitAccount(account: Int, debitAmount: Float): UIO[Boolean] =
@@ -86,14 +85,12 @@ object ZService {
           .map(_.values.collect {
             case r @ Account(_, a, _, _) if a == accountNumber => r
           }.toList)
-          .tap(list => ZIO.when(list.nonEmpty)(subscribers.publish(READ)))
 
       override def findAccountHolder(name: String): UIO[List[Account]] =
         accountState.get
           .map(_.values.collect {
             case r @ Account(n, _, _, _) if n == name => r
           }.toList)
-          .tap(list => ZIO.when(list.nonEmpty)(subscribers.publish(READ)))
 
       override def deleteAccount(account: Int): UIO[Boolean] =
         accountState
@@ -102,7 +99,6 @@ object ZService {
               (true, state.removed(account))
             else (false, state)
           )
-          .tap(deleted => ZIO.when(deleted)(subscribers.publish(DELETE)))
 
       override def accountEvent: ZStream[Any, Nothing, AccountEvent] =
         ZStream.scoped(subscribers.subscribe).flatMap(ZStream.fromQueue(_))

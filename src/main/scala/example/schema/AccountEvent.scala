@@ -1,11 +1,8 @@
 package example.schema
 
 sealed trait AccountEvent
-
+// comment field here
 object AccountEvent {
-  case object OPEN extends AccountEvent
-  case object DELETE extends AccountEvent
   case object DEBIT extends AccountEvent
   case object CREDIT extends AccountEvent
-  case object READ extends AccountEvent
 }
