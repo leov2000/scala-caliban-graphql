@@ -1,4 +1,4 @@
-package example.route
+package account.route
 
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._

@@ -1,4 +1,4 @@
-package example.schema
+package account.schema
 
 import java.time.ZonedDateTime
 

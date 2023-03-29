@@ -1,4 +1,4 @@
-package example.schema
+package account.schema
 
 sealed trait AccountEvent
 // comment field here

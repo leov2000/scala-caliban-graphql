@@ -1,15 +1,15 @@
-package example.graphql
+package account.graphql
 
-import example.schema.AccountEvent._
-import example.schema.{ Account, AccountEvent }
+import account.schema.AccountEvent._
+import account.schema.{ Account, AccountEvent }
 import zio.stream.ZStream
 import zio.{ Hub, Ref, UIO, URIO, ZIO, ZLayer }
 
 import java.time.ZonedDateTime
 
-object ZService {
+object ZAccountService {
 
-  trait ExampleService {
+  trait AccountService {
 
     def addAccount(name: String, balance: Float): UIO[Boolean]
 
@@ -26,33 +26,33 @@ object ZService {
     def accountEvent: ZStream[Any, Nothing, AccountEvent]
   }
 
-  def addAccount(name: String, balance: Float): URIO[ExampleService, Boolean] =
+  def addAccount(name: String, balance: Float): URIO[AccountService, Boolean] =
     ZIO.serviceWithZIO(_.addAccount(name, balance))
 
-  def debitAccount(account: Int, debitAmount: Float): URIO[ExampleService, Boolean] =
+  def debitAccount(account: Int, debitAmount: Float): URIO[AccountService, Boolean] =
     ZIO.serviceWithZIO(_.debitAccount(account, debitAmount))
 
-  def creditAccount(account: Int, creditAmount: Float): URIO[ExampleService, Boolean] =
+  def creditAccount(account: Int, creditAmount: Float): URIO[AccountService, Boolean] =
     ZIO.serviceWithZIO(_.creditAccount(account, creditAmount))
 
-  def getAccount(account: Int): URIO[ExampleService, List[Account]] =
+  def getAccount(account: Int): URIO[AccountService, List[Account]] =
     ZIO.serviceWithZIO(_.getAccount(account))
 
-  def findAccountHolder(name: String): URIO[ExampleService, List[Account]] =
+  def findAccountHolder(name: String): URIO[AccountService, List[Account]] =
     ZIO.serviceWithZIO(_.findAccountHolder(name))
 
-  def deleteAccount(account: Int): URIO[ExampleService, Boolean] =
+  def deleteAccount(account: Int): URIO[AccountService, Boolean] =
     ZIO.serviceWithZIO(_.deleteAccount(account))
 
-  def deletedEvents: ZStream[ExampleService, Nothing, AccountEvent] =
+  def deletedEvents: ZStream[AccountService, Nothing, AccountEvent] =
     ZStream.serviceWithStream(_.accountEvent)
 
-  def make(account: Map[Int, Account]): ZLayer[Any, Nothing, ExampleService] = ZLayer {
+  def make(account: Map[Int, Account]): ZLayer[Any, Nothing, AccountService] = ZLayer {
     for {
       accountState   <- Ref.make(account)
       accountCounter <- Ref.make(0)
       subscribers    <- Hub.unbounded[AccountEvent]
-    } yield new ExampleService {
+    } yield new AccountService {
 
       override def addAccount(name: String, balance: Float): UIO[Boolean] = for {
         account <- accountCounter.getAndUpdate(_ + 1)
