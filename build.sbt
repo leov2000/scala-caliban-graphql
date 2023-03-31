@@ -9,7 +9,7 @@ val akkaHttpVersion = "10.2.10"
 val calibanVersion = "2.0.2"
 val circeVersion = "1.2.10"
 val zioVersion = "2.0.5"
-val logbackVersion = "1.2.10"
+val logbackVersion = "1.3.0"
 val scalaLoggingVersion = "3.9.4"
 
 libraryDependencies ++= Seq(

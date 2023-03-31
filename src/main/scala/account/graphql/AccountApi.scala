@@ -6,12 +6,13 @@ import caliban.schema.GenericSchema
 import caliban.{ GraphQL, RootResolver }
 import account.graphql.ZAccountService.AccountService
 import account.schema.{ Account, AccountEvent }
+import com.typesafe.scalalogging.LazyLogging
 import zio.URIO
 import zio.stream.ZStream
 
-object AccountApi extends GenericSchema[AccountEnv] {
+object AccountApi extends GenericSchema[AccountEnv] with LazyLogging {
 
-  case class AddAccountArgs(name: String, balance: Long)
+  case class AddAccountArgs(name: String, balance: Float)
 
   case class FindByAccountArgs(account: Int)
 
@@ -52,4 +53,7 @@ object AccountApi extends GenericSchema[AccountEnv] {
         Subscriptions(ZAccountService.deletedEvents)
       )
     )
+
+  //uncomment to see Schema
+//  logger.info(api.render)
 }
