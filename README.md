@@ -45,6 +45,6 @@ query {
 ### Example Subscription
 ```
 subscription {
-  characterDeleted
+  accountEvents
 }
 ```

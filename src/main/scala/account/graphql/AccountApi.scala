@@ -35,7 +35,7 @@ object AccountApi extends GenericSchema[AccountEnv] with LazyLogging {
     deleteAccount: DeleteAccountArgs => URIO[AccountService, Boolean]
   )
 
-  case class Subscriptions(characterDeleted: ZStream[AccountService, Nothing, AccountEvent])
+  case class Subscriptions(accountEvents: ZStream[AccountService, Nothing, AccountEvent])
 
   val api: GraphQL[AccountService] =
     graphQL(
@@ -54,6 +54,6 @@ object AccountApi extends GenericSchema[AccountEnv] with LazyLogging {
       )
     )
 
-  //uncomment to see Schema
+  //uncomment to see GRAPHQL Schema
 //  logger.info(api.render)
 }
